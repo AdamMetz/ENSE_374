@@ -1,12 +1,50 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
-<body>
-    
-</body>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Login</title>
+    </head>
+    <body>
+        <h1>To do</h1>
+        
+        <!-- Login form. Inputs: Email, Password -->
+        <input type="button" value="Login Dropdown">
+        <h1>Login</h1>
+        <form action="./todo.html" method ="post" enctype="text/plain">
+            
+            <label for="email">Email</label>
+            <input type="text" name="email" id="email" placeholder="Email address">
+            <br>
+
+            <label for="password">Password</label>
+            <input type="text" name="password" id="password" placeholder="Password">
+            <br>
+
+            <input type="submit" value="Login">
+        </form>
+        <br>
+
+        <!-- Signup form. Inputs: Email, Password, Authentication -->
+        <input type="button" value="Signup Dropdown">
+        <h1>Signup</h1>
+        <form action="./todo.html" method ="post" enctype="text/plain">
+
+            <label for="email">Email</label>
+            <input type="text" name="email" id="email" placeholder="Email address">
+            <br>
+
+            <label for="password">Password</label>
+            <input type="password" name="password" id="password" placeholder="Password">
+            <br>
+
+            <label for="auth">Authentication</label>
+            <input type="text" name="auth" id="auth" placeholder="Authentication">
+            <br>
+
+            <input type="submit" value="Signup">
+        </form>
+
+    </body>
 </html>

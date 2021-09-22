@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Todo List</title>
+    </head>
+    <body>
+        <h1>To do</h1>
+
+        <input type="button" value="Logged in as USER">
+        <br><br>
+
+        <!-- Redirect to sign in page -->
+        <form action="./index.html">
+            <input type="submit" value="Logout">
+        </form>
+
+        <!-- To do list -->
+        <ul style="list-style-type:none; padding-left: 0;" id = "to-do-list">
+            <li> <input type="checkbox" checked="checked"> <input type="text" placeholder="My finished task"> </li>
+            <li> <input type="checkbox"> <input type="text" placeholder="My unfinished task"> <input type="button" value="Abandon"> </li>
+            <li> <input type="text" placeholder="Someone else's finished"> </li>
+            <li> <input type="text" placeholder="Someone else's unfinished"> </li>
+            <li> <input type="text" placeholder="unclaimed"> <input type="button" value="Claim"> </li>
+        </ul>
+        <br>
+        
+        <!-- Add a new to do list item -->
+        <input type="text" placeholder="Enter a new task here"> <br>
+        <input type="button" value="Add"> <br>
+        <input type="button" value="Remove Complete">
+
+    </body>
+</html>
