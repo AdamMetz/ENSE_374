@@ -1,50 +1,83 @@
 <!DOCTYPE html>
     <html lang="en">
     <head>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+        <link rel="stylesheet" href="css/style.css">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
         <meta charset="UTF-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Login</title>
     </head>
     <body>
-        <h1>To do</h1>
-        
-        <!-- Login form. Inputs: Email, Password -->
-        <input type="button" value="Login Dropdown">
-        <h1>Login</h1>
-        <form action="./todo.html" method ="post" enctype="text/plain">
-            
-            <label for="email">Email</label>
-            <input type="text" name="email" id="email" placeholder="Email address">
-            <br>
+        <div class ="centering-content" id="login-box">
+        <h1 class=".align-middle" id="index-header">To do Prototype</h1>
 
-            <label for="password">Password</label>
-            <input type="text" name="password" id="password" placeholder="Password">
-            <br>
+        <!-- Source: https://getbootstrap.com/docs/4.0/components/collapse/ -->
+        <!-- I used the Bootstrap documentation for an accordion example, and tailored it to the log in and sign up forms.-->
+        <div class="shadow-lg mb-5 bg-white rounded align-middle text-center" id="login-signup-box">
+            <div class="accordion" id="login-accordion">
+                <div class="accordion-item">
+                <h2 class="accordion-header" id="headingOne">
+                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                    Log In
+                    </button>
+                </h2>
+                <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#login-accordion">
+                    <div class="accordion-body">
+                        <h3>Log In</h3>
+                        <!-- Login form. Inputs: Email, Password -->
+                        <form action="/login" method ="POST">
+                
+                            <label for="email-login">Email address</label>
+                            <br>
+                            <input type="email" name="email" id="email-login" placeholder="Email address">
+                            <br>
+                
+                            <label for="password-login">Password</label>
+                            <br>
+                            <input type="password" name="password" id="password-login" placeholder="Password">
+                            <br>
+                            <br>
+                            <input class="btn btn-primary" type="submit" value="Log In">
+                        </form>
+                    </div>
+                </div>
+                </div>
+                <div class="accordion-item">
+                <h2 class="accordion-header" id="headingTwo">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                    Register
+                    </button>
+                </h2>
+                <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#login-accordion">
+                    <div class="accordion-body">
+                        <!-- Signup form. Inputs: Email, Password, Authentication -->
+                        <h3>Sign Up</h3>
+                        <form action="/signup" method ="post">
 
-            <input type="submit" value="Login">
-        </form>
+                            <label for="email-signup">Email address</label><br>
+                            <input type="email" name="email" id="email-signup" placeholder="Email address"><br>
+                            
+                            <label for="password-signup">Password</label><br>
+                            <input type="password" name="password" id="password-signup" placeholder="Password"><br>
+                            
+
+                            <label for="auth">Authentication</label><br>
+                            <input type="password" name="auth" id="auth" placeholder="Authentication"><br><br>
+
+                            <input class="btn btn-primary" type="submit" value="Sign Up">
+                        </form>
+                    </div>
+                </div>
+                </div>
+            </div>
+        </div>
         <br>
-
-        <!-- Signup form. Inputs: Email, Password, Authentication -->
-        <input type="button" value="Signup Dropdown">
-        <h1>Signup</h1>
-        <form action="./todo.html" method ="post" enctype="text/plain">
-
-            <label for="email">Email</label>
-            <input type="text" name="email" id="email" placeholder="Email address">
-            <br>
-
-            <label for="password">Password</label>
-            <input type="password" name="password" id="password" placeholder="Password">
-            <br>
-
-            <label for="auth">Authentication</label>
-            <input type="text" name="auth" id="auth" placeholder="Authentication">
-            <br>
-
-            <input type="submit" value="Signup">
-        </form>
-
+        </div>
+        
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
     </body>
 </html>
