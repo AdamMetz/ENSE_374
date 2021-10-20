@@ -25,13 +25,12 @@ app.get("/", (req, res) => {
 });
 
 app.get("/todo", (req, res) => {
-    res.sendFile(__dirname + "/todo.html");
-    console.log("A user accessed the todo page");
+    res.sendFile(__dirname + "/index.html");
+    console.log("A user tried to incorrectly access the todo page");
 });
 
-
 //Login Authentication
-app.post("/login", (req, res) => {
+app.post("/todo", (req, res) => {
     var email = req.body.email;
     var password = req.body.password;
 
@@ -45,13 +44,12 @@ app.post("/login", (req, res) => {
         for (var curr_user of user_JSON.users){
             if (email == curr_user.email && password == curr_user.password){
                 valid = true;
-                res.redirect("/todo");
+                res.sendFile(__dirname + "/todo.html");
+                console.log("A user accessed the todo page");
             }  
         }
-    } else {
-        res.redirect("/");
     }
-    if (!valid){res.redirect("/");}
+    if (!valid){res.redirect("/")};
 });
 
 //Signup Authentication
@@ -84,7 +82,7 @@ app.post("/signup", (req, res) => {
                 fs.writeFile('user-data.json', data_str, function(err) {
                     if(err) console.log('error', err);
                 });
-                res.redirect("/todo");
+                res.redirect(307, "/todo");
             }
     }
 });
