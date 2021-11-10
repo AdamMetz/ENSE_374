@@ -1,15 +1,93 @@
 const fs = require('fs');
 const express = require ( "express" );
-const { userInfo } = require('os');
+
+// 1. Require dependencies /////////////////////////////////////////
+const session = require("express-session")
+const passport = require("passport")
+const passportLocalMongoose = require("passport-local-mongoose")
+require("dotenv").config();
+////////////////////////////////////////////////////////////////////
 
 // this is a canonical alias to make your life easier, like jQuery to $.
 const app = express(); 
+
+// 2. Create a session. The secret is used to sign the session ID.
+app.use(session({
+    secret: process.env.SECRET,
+    resave: false,
+    saveUninitialized: false
+}));
+
+app.use (passport.initialize());
+app.use (passport.session());
+////////////////////////////////////////////////////////////////////
 
 app.set("view engine", "ejs");
 app.use(express.urlencoded({ extended: true})); 
 app.use(express.json());
 app.use(express.static("public"));
 
+const mongoose = require( "mongoose" );
+const internal = require('stream');
+// connect to mongoose on port 27017
+mongoose.connect( "mongodb://localhost:27017/task_list_site", 
+                { useNewUrlParser: true, 
+                  useUnifiedTopology: true});
+
+
+// 3. Create the userSchema /////////////////////////////////////////
+// It is important not to change these names
+// passport-local-mongoose expects these. Use `username` and `password`!
+const userSchema = new mongoose.Schema ({
+    username: String,
+    password: String
+})
+
+// plugins extend Schema functionality
+userSchema.plugin(passportLocalMongoose);
+
+const User = new mongoose.model("User", userSchema);
+////////////////////////////////////////////////////////////////////
+
+//Mongoose schema for a task
+const taskSchema = new mongoose.Schema ({
+    text: String,
+    state: String,
+    creator: {type: mongoose.Schema.Types.ObjectId, ref: "User"},
+    isTaskClaimed: Boolean,
+    claimingUser: {type: mongoose.Schema.Types.ObjectId, ref: "User"},
+    isTaskDone: Boolean,
+    isTaskCleared: Boolean
+});
+
+const Task = new mongoose.model ("Task", taskSchema);
+
+class User_obj {
+    constructor (username, password){
+        this.username = username;
+        this.password = password;
+    }
+}
+
+class Task_obj {
+    constructor (id, text, state, creator, isTaskClaimed, claimingUser, isTaskDone, isTaskCleared){
+        this.id = id;
+        this.text = text;
+        this.state = state;
+        this.creator = creator;
+        this.isTaskClaimed = isTaskClaimed;
+        this.claimingUser = claimingUser;
+        this.isTaskDone = isTaskDone;
+        this.isTaskCleared = isTaskCleared;
+    }
+}
+
+// 4. Add our strategy for using Passport, using the local user from MongoDB
+passport.use(User.createStrategy());
+
+passport.serializeUser(User.serializeUser());
+passport.deserializeUser(User.deserializeUser());
+////////////////////////////////////////////////////////////////////
 
 // a common localhost test port
 const port = 3000; 
@@ -25,208 +103,112 @@ app.get("/", (req, res) => {
     console.log("A user requested the root route");
 });
 
-app.get("/todo", (req, res) => {
+// 8. Logout ///////////////////////////////////////////////////////
+app.get( "/logout", ( req, res ) => {
+    console.log( "A user is logging out" );
+    req.logout();
     res.redirect("/");
 });
+////////////////////////////////////////////////////////////////////
 
-app.get("/logout", (req, res) => {
-    res.redirect("/");
-});
-
-app.post("/todo", (req, res) => {
-    var task_data = fs.readFileSync("user-data.json");
-    var task_list = JSON.parse(task_data).Tasks;
-    res.render("todo.ejs", {user_obj: req.body, tasks: task_list});
-    console.log("A user accessed the todo page");
-});
-
-//Login Authentication
-app.post("/login", (req, res) => {
-    var email = req.body.email;
-    var password = req.body.password;
-
-    //Retrieve JSON list
-    var user_data = fs.readFileSync("user-data.json");
-    var user_JSON = JSON.parse(user_data);
-    var valid = false;
-
-    //If the login is valid, redirect user to todo page, otherwise, redirect user to the login page.
-    if(email != "" && password != ""){
-        for (var curr_user of user_JSON.Users){
-            if (email === curr_user.email && password === curr_user.password){
-                valid = true;
-                res.redirect(307, "/todo");
-            }  
+// 7. Register get routes for reviews and add-review ////////////////
+app.get( "/todo", async( req, res ) => {
+    console.log("A user is accessing the todo route using get, and...");
+    if ( req.isAuthenticated() ){
+        try {
+            console.log( "was authorized and found:" );
+            const tasks = await Task.find();
+            res.render("todo.ejs", {username: req.user.username, uid: req.user.id, tasks: tasks});
+            console.log("A user accessed the todo page");
+        } catch ( error ) {
+            console.log( error );
         }
-    }
-    if (!valid){res.redirect("/")};
-});
-
-//Signup Authentication
-app.post("/register", (req, res) => {
-
-    var email = req.body.email;
-    var password = req.body.password;
-    var auth = req.body.auth;
-
-    //Validate the user is creating a unique account, and inputted all 3 needed parameters for signup.
-    if (!email.length || !password.length || !auth.length || auth != "todo2021"){
-        res.redirect("/");
-        } else {
-            var user_data = fs.readFileSync("user-data.json");
-            var user_JSON = JSON.parse(user_data);
-            var unique_email = true;
-
-            //Check if an account already exists with the provided email.
-            for (var curr_user of user_JSON.Users){
-                if (email == curr_user.email){
-                    res.redirect("/");
-                    unique_email = false;
-                }  
-            }
-
-            //If the user made a valid signup entry, add their credentials to the very secure user-data.json
-            if (unique_email){
-                let user_obj = {"email":req.body.email, "password":req.body.password};
-                user_JSON.Users[user_JSON.Users.length] = (user_obj);
-                data_str = JSON.stringify(user_JSON);
-                fs.writeFile('user-data.json', data_str, function(err) {
-                    if(err) console.log('error', err);
-                });
-                res.redirect(307, "/todo");
-            }
-    }
-});
-
-class Task{
-    constructor (id, text, state, creator, isTaskClaimed, claimingUser, isTaskDone, isTaskCleared){
-        this.id = id;
-        this.text = text;
-        this.state = state;
-        this.creator = creator;
-        this.isTaskClaimed = isTaskClaimed;
-        this.claimingUser = claimingUser;
-        this.isTaskDone = isTaskDone;
-        this.isTaskCleared = isTaskCleared;
-    }
-}
-
-//Add a Task
-app.post("/addtask", (req, res) => {
-    var text = req.body.taskInfo;
-    if (!text.length){
-        res.redirect(307, "/todo");
     } else {
-        var user = req.body.email;
-        var task_data = fs.readFileSync("user-data.json");
-        var task_JSON = JSON.parse(task_data);
-        var task = new Task(
-            task_JSON.Tasks.length,
-            text,
-            "New Task",
-            user,
-            false,
-            "",
-            false,
-            false
-        );
-        task_JSON.Tasks[task_JSON.Tasks.length] = task;
-        data_str = JSON.stringify(task_JSON);
-        fs.writeFile('user-data.json', data_str, function(err) {
-            if(err) console.log('error', err);
-        });
-        console.log(task);
-        res.redirect(307, "/todo");
+        console.log( "was not authorized." );
+        res.redirect( "/" );
     }
 });
+
+// 6. Log in users on the login route ////////////////////////////////
+app.post( "/login",  passport.authenticate( "local" , {successRedirect: "/todo", failureRedirect: "/"}));
+////////////////////////////////////////////////////////////////////
+
+// 5. Register a user with the following code, which needs to be in the appropriate route
+// As in (3), be sure to use req.body.username and req.body.password, and ensure the 
+// html forms match these values as well
+app.post( "/register", (req, res) => {
+    console.log( "User " + req.body.username + " is attempting to register" );
+    console.log(req.body);
+    if (req.body.auth === "todo2021"){
+        User.register({ username : req.body.username }, 
+            req.body.password, 
+            ( err, user ) => {
+        if ( err ) {
+            console.log( err );
+            res.redirect( "/" );
+        } else {
+            passport.authenticate( "local" )( req, res, () => {
+                res.redirect( "/todo" );
+            });
+        }
+        });
+    } else{
+        res.redirect( "/" );
+    }
+});
+////////////////////////////////////////////////////////////////////
+
+// 9. Submit a post to the database ////////////////////////////////
+// Note that in the username, we are using the username from the
+// session rather than the form
+app.post( "/addtask", async( req, res ) => {
+    console.log( "User " + req.user.username + " is adding a task" );
+    //Check if the user entered anything for the task info.
+    if (req.body.taskInfo.length){
+        const task = new Task({
+            text: req.body.taskInfo,
+            state: "New Task",
+            creator: req.user.id,
+            isTaskClaimed: false,
+            claimingUser: null,
+            isTaskDone: false,
+            isTaskCleared: false
+        });
+    
+        task.save();
+    }
+    res.redirect( "/todo" );
+});
+////////////////////////////////////////////////////////////////////
 
 //Claim a task
-app.post("/claim", (req, res) => {
-    var task_data = fs.readFileSync("user-data.json");
-    var task_JSON = JSON.parse(task_data);
-    var id = req.body.id;
-
-    task_JSON.Tasks[id].isTaskClaimed = true;
-    task_JSON.Tasks[id].claimingUser = req.body.email;
-
-    data_str = JSON.stringify(task_JSON);
-    fs.writeFile('user-data.json', data_str, function(err) {
-        if(err) console.log('error', err);
-    });
-    res.redirect(307, "/todo");
+app.post("/claim", async(req, res) => {
+    await Task.updateOne({_id: req.body.id}, {$set: {state: "Claimed", isTaskClaimed: true, claimingUser: req.user.id}});
+    res.redirect("/todo");
 });
 
 //Abandon a task
-app.post("/abandon", (req, res) => {
-    var task_data = fs.readFileSync("user-data.json");
-    var task_JSON = JSON.parse(task_data);
-    var id = req.body.id;
-
-    task_JSON.Tasks[id].isTaskClaimed = false;
-    task_JSON.Tasks[id].claimingUser = "";
-
-    data_str = JSON.stringify(task_JSON);
-    fs.writeFile('user-data.json', data_str, function(err) {
-        if(err) console.log('error', err);
-    });
-    res.redirect(307, "/todo");
+app.post("/abandon", async(req, res) => {
+    await Task.updateOne({_id: req.body.id}, {$set: {state: "New Task", isTaskClaimed: false, claimingUser: null}});
+    res.redirect("/todo");
 });
 
 //Update task to complete
-app.post("/complete", (req, res) => {
-    var task_data = fs.readFileSync("user-data.json");
-    var task_JSON = JSON.parse(task_data);
-
-    task_JSON.Tasks[req.body.id].isTaskDone = true;
-
-    data_str = JSON.stringify(task_JSON);
-    fs.writeFile('user-data.json', data_str, function(err) {
-        if(err) console.log('error', err);
-    });
-    res.redirect(307, "/todo");
+app.post("/complete", async(req, res) => {
+    await Task.updateOne({_id: req.body.id}, {$set: {state: "Complete", isTaskDone: true}});
+    res.redirect("/todo");
 });
 
 //Update task to uncomplete
-app.post("/uncomplete", (req, res) => {
-    var task_data = fs.readFileSync("user-data.json");
-    var task_JSON = JSON.parse(task_data);
-
-    task_JSON.Tasks[req.body.id].isTaskDone = false;
-
-    data_str = JSON.stringify(task_JSON);
-    fs.writeFile('user-data.json', data_str, function(err) {
-        if(err) console.log('error', err);
-    });
-    res.redirect(307, "/todo");
+app.post("/uncomplete", async(req, res) => {
+    await Task.updateOne({_id: req.body.id}, {state: "Claimed", $set: {isTaskDone: false}});
+    res.redirect("/todo");
 });
 
 //Remove all complete tasks
-app.post("/purge", (req, res) => {
-    var task_data = fs.readFileSync("user-data.json");
-    var task_JSON = JSON.parse(task_data);
-    var length = task_JSON.Tasks.length;
-
-    for (var i = 0; i < length; i = i + 1){
-        if(task_JSON.Tasks[i].isTaskDone){
-            task_JSON.Tasks.splice(i, 1);
-            length = task_JSON.Tasks.length;
-            i = i - 1;
-        }
-    }
-
-    var ID = 0;
-    for(var taskID of task_JSON.Tasks){
-        if(taskID != null){
-            taskID.id = ID;
-            ID = ID + 1;
-        }
-    }
-
-    data_str = JSON.stringify(task_JSON);
-    fs.writeFile('user-data.json', data_str, function(err) {
-        if(err) console.log('error', err);
-    });
-    res.redirect(307, "/todo");
+app.post("/purge", async(req, res) => {
+    await Task.deleteMany({isTaskDone: true});
+    res.redirect("/todo");
 });
 
 
